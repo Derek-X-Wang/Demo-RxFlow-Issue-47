@@ -7,15 +7,35 @@
 //
 
 import UIKit
+import RxFlow
+import RxSwift
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    let disposeBag = DisposeBag()
+    var coordinator = Coordinator()
+    var appFlow: AppFlow!
+    lazy var appServices = {
+        return AppServices()
+    }()
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        guard let window = self.window else { return false }
+        //RxFlow
+        coordinator.rx.didNavigate.subscribe(onNext: { (flow, step) in
+            print ("did navigate to flow=\(flow) and step=\(step)")
+        }).disposed(by: self.disposeBag)
+//        coordinator.rx.willNavigate.subscribe(onNext: { (flow, step) in
+//            print ("will navigate to flow=\(flow) and step=\(step)")
+//        }).disposed(by: self.disposeBag)
+        self.appFlow = AppFlow(withWindow: window, andServices: self.appServices)
+        coordinator.coordinate(flow: self.appFlow, withStepper: AppStepper(withServices: self.appServices))
+        
         return true
     }
 
